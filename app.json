@@ -26,6 +26,9 @@
         "projectId": "85485d69-0d8e-459e-9e19-7793b09f539a"
       }
     },
-    "owner": "luienmguanl"
+    "owner": "luienmguanl",
+    "plugins": [
+      "react-native-maps"
+    ]
   }
 }

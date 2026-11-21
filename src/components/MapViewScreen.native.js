@@ -3,6 +3,13 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Button, Card, Text, useTheme } from 'react-native-paper';
 import { cityById, formatDate, useApp } from '../context/AppContext';
 
+const MEXICO_REGION = {
+  latitude: 23.6345,
+  longitude: -102.5528,
+  latitudeDelta: 20,
+  longitudeDelta: 34,
+};
+
 export default function MapViewScreen() {
   const { orders, selectedOrderId, simulatedNow, toggleSimulation, simulationRunning } = useApp();
   const { colors } = useTheme();
@@ -22,7 +29,7 @@ export default function MapViewScreen() {
       style={styles.map}
       provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
       mapType="standard"
-      initialRegion={{ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 8, longitudeDelta: 8 }}
+      initialRegion={MEXICO_REGION}
     >
       <Polyline coordinates={coordinates} strokeColor={colors.primary} strokeWidth={4} />
       {cities.map((city, index) => <Marker key={city.id} coordinate={city} title={city.name} description={index === 0 ? 'Origen' : index === cities.length - 1 ? 'Destino' : 'Nodo de ruta'} pinColor={city.id === order.currentCityId ? colors.currentMarker : colors.primary} />)}

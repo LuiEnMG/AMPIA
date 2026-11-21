@@ -1,1 +1,1 @@
-export { default } from './map-view';
+export { default } from '../../components/MapViewScreen';

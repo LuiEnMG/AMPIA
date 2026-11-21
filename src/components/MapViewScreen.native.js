@@ -1,9 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Button, Card, Text, useTheme } from 'react-native-paper';
-import { cityById, formatDate, useApp } from '../../context/AppContext';
+import { cityById, formatDate, useApp } from '../context/AppContext';
 
-export default function MapScreen() {
+export default function MapViewScreen() {
   const { orders, selectedOrderId, simulatedNow, toggleSimulation, simulationRunning } = useApp();
   const { colors } = useTheme();
   const order = orders.find((item) => item.id === selectedOrderId);

@@ -8,8 +8,13 @@ export default function MapScreen() {
   const { colors } = useTheme();
   const order = orders.find((item) => item.id === selectedOrderId);
   if (!order) return <View style={[styles.empty, { backgroundColor: colors.background }]}><Text variant="titleMedium">Selecciona un pedido desde Pedidos para consultar su rastreo.</Text></View>;
-  const cities = order.route.map(cityById).filter(Boolean);
+  if (order.status === 'cancelled') return <View style={[styles.empty, { backgroundColor: colors.background }]}><Text variant="titleMedium">Este pedido fue cancelado y ya no tiene rastreo activo.</Text></View>;
+  const cities = (Array.isArray(order.route) ? order.route : []).map(cityById).filter(Boolean);
   const current = cityById(order.currentCityId);
+  const hasValidCoordinates = cities.every((city) =>
+    Number.isFinite(city.latitude) && Number.isFinite(city.longitude)
+  ) && current && Number.isFinite(current.latitude) && Number.isFinite(current.longitude);
+  if (!cities.length || !hasValidCoordinates) return <View style={[styles.empty, { backgroundColor: colors.background }]}><Text variant="titleMedium">No hay información de ruta disponible para este pedido.</Text></View>;
   const coordinates = cities.map(({ latitude, longitude }) => ({ latitude, longitude }));
   return <View style={[styles.container, { backgroundColor: colors.background }]}>
     <MapView style={styles.map} initialRegion={{ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 10, longitudeDelta: 10 }}>

@@ -1,5 +1,5 @@
-import { StyleSheet, View } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import { Platform, StyleSheet, View } from 'react-native';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Button, Card, Text, useTheme } from 'react-native-paper';
 import { cityById, formatDate, useApp } from '../context/AppContext';
 
@@ -17,7 +17,13 @@ export default function MapViewScreen() {
   if (!cities.length || !hasValidCoordinates) return <View style={[styles.empty, { backgroundColor: colors.background }]}><Text variant="titleMedium">No hay información de ruta disponible para este pedido.</Text></View>;
   const coordinates = cities.map(({ latitude, longitude }) => ({ latitude, longitude }));
   return <View style={[styles.container, { backgroundColor: colors.background }]}>
-    <MapView style={styles.map} initialRegion={{ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 10, longitudeDelta: 10 }}>
+    <MapView
+      key={`${order.id}-${current.id}`}
+      style={styles.map}
+      provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+      mapType="standard"
+      initialRegion={{ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 8, longitudeDelta: 8 }}
+    >
       <Polyline coordinates={coordinates} strokeColor={colors.primary} strokeWidth={4} />
       {cities.map((city, index) => <Marker key={city.id} coordinate={city} title={city.name} description={index === 0 ? 'Origen' : index === cities.length - 1 ? 'Destino' : 'Nodo de ruta'} pinColor={city.id === order.currentCityId ? colors.currentMarker : colors.primary} />)}
     </MapView>
@@ -35,7 +41,7 @@ export default function MapViewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  map: { flex: 1 },
+  map: { flex: 1, minHeight: 240 },
   panel: { position: 'absolute', left: 12, right: 12, bottom: 12 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 });

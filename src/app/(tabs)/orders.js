@@ -1,15 +1,16 @@
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Button, Card, Chip, Text } from 'react-native-paper';
-import { cityById, formatDate, useApp } from '../../context/AppContext';
+import { Button, Card, Chip, Text, useTheme } from 'react-native-paper';
+import { cityById, deliveryDate, formatDate, useApp } from '../../context/AppContext';
 
 const labels = { preparing: 'Preparando', in_transit: 'En tránsito', near_destination: 'Cerca del destino', delivered: 'Entregado' };
 
 export default function OrdersScreen() {
   const { orders, simulatedNow, selectOrder } = useApp();
-  return <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+  const { colors } = useTheme();
+  return <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
     <Text variant="headlineSmall" style={styles.title}>Pedidos activos</Text>
-    <Text style={styles.clock}>Fecha simulada: {formatDate(simulatedNow)}</Text>
+    <Text style={[styles.clock, { color: colors.mutedText }]}>Fecha simulada: {formatDate(simulatedNow)}</Text>
     {!orders.length && <Card style={styles.card}><Card.Content><Text>No hay pedidos. Crea uno desde Productos.</Text><Button onPress={() => router.push('/(tabs)/products')}>Ver productos</Button></Card.Content></Card>}
     {orders.map((order) => {
       const destination = cityById(order.destinationCityId);
@@ -18,7 +19,7 @@ export default function OrdersScreen() {
         <Card.Content>
           <Chip icon={order.status === 'delivered' ? 'check' : 'truck'}>{labels[order.status]}</Chip>
           <Text style={styles.detail}>Nodo actual: {cityById(order.currentCityId)?.name}</Text>
-          <Text style={styles.detail}>Entrega estimada: {formatDate(new Date(new Date(order.createdAt).getTime() + order.totalHours * 3600000))}</Text>
+          <Text style={styles.detail}>Entrega estimada: {formatDate(deliveryDate(order))}</Text>
         </Card.Content>
       </Card>;
     })}
@@ -26,10 +27,10 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f6f8fb' },
+  container: { flex: 1 },
   content: { padding: 16 },
   title: { fontWeight: '700' },
-  clock: { marginVertical: 8, color: '#52606d' },
-  card: { marginBottom: 12, backgroundColor: 'white' },
+  clock: { marginVertical: 8 },
+  card: { marginBottom: 12 },
   detail: { marginTop: 8 },
 });

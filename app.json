@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "AMPIA",
+    "name": "Envion",
     "slug": "AMPIA",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,8 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.luienmguanl.AMPIA"
     },
     "web": {
       "favicon": "./assets/favicon.png"

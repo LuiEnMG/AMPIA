@@ -15,6 +15,7 @@ const initialState = {
   departure: { street: 'Av. Reforma 100', cityId: DEFAULT_CITY_ID, postalCode: '06600', isDefault: true },
   simulatedNow: DEFAULT_DATE,
   simulationRunning: true,
+  themeMode: 'light',
   hydrated: false,
 };
 
@@ -48,6 +49,8 @@ function reducer(state, action) {
       });
       return { ...state, simulatedNow: nextNow.toISOString(), orders };
     }
+    case 'toggleTheme':
+      return { ...state, themeMode: state.themeMode === 'dark' ? 'light' : 'dark' };
     case 'resetDate':
       return { ...state, simulatedNow: DEFAULT_DATE };
     default:
@@ -91,6 +94,7 @@ export function AppProvider({ children }) {
     saveDeparture: (departure) => dispatch({ type: 'saveDeparture', departure }),
     selectOrder: (id) => dispatch({ type: 'selectOrder', id }),
     toggleSimulation: () => dispatch({ type: 'toggleSimulation' }),
+    toggleTheme: () => dispatch({ type: 'toggleTheme' }),
     resetDate: () => dispatch({ type: 'resetDate' }),
     createOrder: ({ product, recipient, address, destinationCityId }) => {
       const path = shortestPath(stateRef.current.departure.cityId, destinationCityId);
@@ -131,6 +135,10 @@ export function useApp() {
 
 export function formatDate(value) {
   return new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+}
+
+export function deliveryDate(order) {
+  return new Date(new Date(order.createdAt).getTime() + order.totalHours * 3600000);
 }
 
 export function copyImageToApp(uri) {

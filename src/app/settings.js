@@ -1,22 +1,27 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
-import { Button, HelperText, Text, TextInput } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Button, HelperText, Switch, Text, TextInput, useTheme } from 'react-native-paper';
 import { CITIES } from '../data/cities';
 import { cityById, formatDate, useApp } from '../context/AppContext';
 
 export default function SettingsScreen() {
-  const { departure, saveDeparture, orders, simulatedNow, resetDate, constants } = useApp();
+  const { departure, saveDeparture, orders, simulatedNow, resetDate, constants, themeMode, toggleTheme } = useApp();
+  const { colors } = useTheme();
   const [street, setStreet] = useState(departure.street);
   const [postalCode, setPostalCode] = useState(departure.postalCode);
   const [cityId, setCityId] = useState(departure.cityId);
   const [saved, setSaved] = useState(false);
   const pending = orders.some((order) => order.status !== 'delivered');
   const save = () => { saveDeparture({ street: street.trim(), postalCode: postalCode.trim(), cityId }); setSaved(true); };
-  return <ScrollView contentContainerStyle={styles.content}>
+  return <ScrollView contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}>
     <Text variant="headlineSmall" style={styles.title}>Configuración</Text>
-    <TextInput label="Dirección de salida" value={street} onChangeText={setStreet} mode="outlined" style={styles.input} />
-    <TextInput label="Código postal" value={postalCode} onChangeText={setPostalCode} mode="outlined" keyboardType="number-pad" style={styles.input} />
+    <View style={styles.row}>
+      <Text variant="titleMedium">Modo oscuro</Text>
+      <Switch value={themeMode === 'dark'} onValueChange={toggleTheme} />
+    </View>
+    <TextInput label="Dirección de salida" value={street} onChangeText={setStreet} mode="outlined" style={[styles.input, { backgroundColor: colors.surface }]} />
+    <TextInput label="Código postal" value={postalCode} onChangeText={setPostalCode} mode="outlined" keyboardType="number-pad" style={[styles.input, { backgroundColor: colors.surface }]} />
     <Text variant="titleMedium" style={styles.label}>Ciudad de salida</Text>
     {CITIES.map((city) => <Button key={city.id} mode={cityId === city.id ? 'contained' : 'outlined'} onPress={() => setCityId(city.id)} style={styles.city}>{city.name}</Button>)}
     <Button mode="contained" onPress={save} style={styles.button}>Guardar dirección</Button>
@@ -29,9 +34,10 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 20, backgroundColor: '#f6f8fb', flexGrow: 1 },
+  content: { padding: 20, flexGrow: 1 },
   title: { fontWeight: '700', marginBottom: 20 },
-  input: { marginBottom: 12, backgroundColor: 'white' },
+  input: { marginBottom: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   label: { marginVertical: 8 },
   city: { marginBottom: 8 },
   button: { marginTop: 16 },

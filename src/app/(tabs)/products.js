@@ -8,10 +8,10 @@ export default function ProductsScreen() {
   const theme = useTheme();
   if (!hydrated) return <View style={styles.center}><Text>Cargando datos locales...</Text></View>;
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text variant="headlineSmall" style={styles.title}>Tus productos</Text>
-        <Text style={styles.subtitle}>Crea productos y reutilízalos en tus pedidos.</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.mutedText }]}>Crea productos y reutilízalos en tus pedidos.</Text>
         {!products.length && <Card style={styles.card}><Card.Content><Text>Aún no tienes productos.</Text><Button onPress={() => router.push('/product/new')}>Crear el primero</Button></Card.Content></Card>}
         {products.map((product) => (
           <Card key={product.id} style={styles.card}>
@@ -21,17 +21,17 @@ export default function ProductsScreen() {
           </Card>
         ))}
       </ScrollView>
-      <FAB icon="plus" color="white" style={[styles.fab, { backgroundColor: theme.colors.primary }]} onPress={() => router.push('/product/new')} />
+      <FAB icon="plus" color={theme.colors.onPrimary} style={[styles.fab, { backgroundColor: theme.colors.primary }]} onPress={() => router.push('/product/new')} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f6f8fb' },
+  container: { flex: 1 },
   content: { padding: 16, paddingBottom: 100 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   title: { fontWeight: '700' },
-  subtitle: { marginTop: 4, marginBottom: 16, color: '#52606d' },
-  card: { marginBottom: 12, backgroundColor: 'white' },
+  subtitle: { marginTop: 4, marginBottom: 16 },
+  card: { marginBottom: 12 },
   fab: { position: 'absolute', right: 20, bottom: 20 },
 });

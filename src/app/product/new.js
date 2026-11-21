@@ -22,7 +22,7 @@ export default function NewProductScreen() {
   };
   const save = () => {
     if (!name.trim() || !description.trim()) return setError('El nombre y la descripción son obligatorios.');
-    addProduct({ id: `product-${Date.now()}`, name: name.trim(), description: description.trim(), photos });
+    addProduct({ id: `product-${Date.now()}`, name: name.trim(), description: description.trim(), photos, createdAt: new Date().toISOString() });
     router.back();
   };
   return <ScrollView contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}>

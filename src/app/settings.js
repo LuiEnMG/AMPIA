@@ -1,18 +1,30 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Switch, Text, TextInput, useTheme } from 'react-native-paper';
 import { CITIES } from '../data/cities';
 import { cityById, formatDate, useApp } from '../context/AppContext';
 
 export default function SettingsScreen() {
-  const { departure, saveDeparture, orders, simulatedNow, resetDate, constants, themeMode, toggleTheme } = useApp();
+  const { departure, saveDeparture, orders, simulatedNow, resetDate, constants, themeMode, toggleTheme, clearDeliveredOrders } = useApp();
   const { colors } = useTheme();
   const [street, setStreet] = useState(departure.street);
   const [postalCode, setPostalCode] = useState(departure.postalCode);
   const [cityId, setCityId] = useState(departure.cityId);
   const [saved, setSaved] = useState(false);
-  const pending = orders.some((order) => order.status !== 'delivered');
+  const pending = orders.some((order) => order.status !== 'delivered' && order.status !== 'cancelled');
+  const deliveredCount = orders.filter((order) => order.status === 'delivered').length;
+  const confirmClearDelivered = () => {
+    if (!deliveredCount) return;
+    Alert.alert(
+      'Borrar pedidos entregados',
+      `¿Eliminar ${deliveredCount} pedido${deliveredCount === 1 ? '' : 's'} entregado${deliveredCount === 1 ? '' : 's'} de la lista?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Borrar', style: 'destructive', onPress: clearDeliveredOrders },
+      ],
+    );
+  };
   const save = () => { saveDeparture({ street: street.trim(), postalCode: postalCode.trim(), cityId }); setSaved(true); };
   return <ScrollView contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}>
     <Text variant="headlineSmall" style={styles.title}>Configuración</Text>
@@ -29,6 +41,9 @@ export default function SettingsScreen() {
     <Text style={styles.info}>Fecha simulada actual: {formatDate(simulatedNow)}</Text>
     <Button mode="outlined" disabled={pending} onPress={resetDate} style={styles.button}>Reiniciar fecha simulada</Button>
     <HelperText type={pending ? 'error' : 'info'}>{pending ? 'No disponible mientras existan pedidos pendientes.' : `Disponible. La fecha volverá a ${formatDate(constants.DEFAULT_DATE)}.`}</HelperText>
+    <Button mode="outlined" icon="delete-sweep-outline" disabled={!deliveredCount} onPress={confirmClearDelivered} style={styles.button}>
+      Borrar pedidos entregados ({deliveredCount})
+    </Button>
     <Button onPress={() => router.back()}>Volver</Button>
   </ScrollView>;
 }

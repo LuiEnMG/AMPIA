@@ -28,7 +28,7 @@ export default function CalendarScreen() {
     const end = addDays(start, WINDOW_WEEKS * 7);
     const byDay = {};
     let later = 0;
-    orders.filter((order) => order.status !== 'delivered').forEach((order) => {
+    orders.filter((order) => order.status !== 'delivered' && order.status !== 'cancelled').forEach((order) => {
       const date = deliveryDate(order);
       if (date >= end) { later += 1; return; }
       const key = dayKey(date);

@@ -21,10 +21,49 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'hydrate':
-      return { ...initialState, ...action.value, hydrated: true };
+    case 'hydrate': {
+      const value = action.value ?? {};
+      const products = (Array.isArray(value.products) ? value.products : []).map((product, index) => ({
+        createdAt: product.createdAt ?? initialState.simulatedNow,
+        ...product,
+        id: product.id ?? `legacy-product-${index}`,
+      }));
+      const productById = new Map(products.map((product) => [product.id, product]));
+      const orders = (Array.isArray(value.orders) ? value.orders : []).map((order, index) => ({
+        ...order,
+        id: order.id ?? `legacy-order-${index}`,
+        productName: order.productName ?? productById.get(order.productId)?.name ?? 'Producto eliminado',
+        route: Array.isArray(order.route) ? order.route : [],
+        segments: Array.isArray(order.segments) ? order.segments : [],
+        totalHours: Number.isFinite(order.totalHours) ? order.totalHours : 0,
+        elapsedHours: Number.isFinite(order.elapsedHours) ? order.elapsedHours : 0,
+        createdAt: order.createdAt ?? initialState.simulatedNow,
+        status: order.status === 'cancelled' ? 'cancelled' : order.status,
+      }));
+      return { ...initialState, ...value, products, orders, selectedOrderId: value.selectedOrderId ?? null, hydrated: true };
+    }
     case 'addProduct':
       return { ...state, products: [action.product, ...state.products] };
+    case 'removeProduct':
+      return { ...state, products: state.products.filter((product) => product.id !== action.productId) };
+    case 'cancelOrder':
+      return {
+        ...state,
+        orders: state.orders.map((order) => (
+          order.id === action.orderId && order.status !== 'delivered' && order.status !== 'cancelled'
+            ? { ...order, status: 'cancelled', cancelledAt: action.cancelledAt }
+            : order
+        )),
+        selectedOrderId: state.selectedOrderId === action.orderId ? null : state.selectedOrderId,
+      };
+    case 'clearDeliveredOrders': {
+      const orders = state.orders.filter((order) => order.status !== 'delivered');
+      return {
+        ...state,
+        orders,
+        selectedOrderId: orders.some((order) => order.id === state.selectedOrderId) ? state.selectedOrderId : null,
+      };
+    }
     case 'saveDeparture':
       return { ...state, departure: { ...action.departure, isDefault: false } };
     case 'addOrder':
@@ -36,7 +75,7 @@ function reducer(state, action) {
     case 'tick': {
       const nextNow = new Date(new Date(state.simulatedNow).getTime() + action.hours * 3600000);
       const orders = state.orders.map((order) => {
-        if (order.status === 'delivered') return order;
+        if (order.status === 'delivered' || order.status === 'cancelled') return order;
         const progress = Math.min(action.hours + order.elapsedHours, order.totalHours);
         const completedNodes = order.route.slice(0, Math.max(1, order.segments.filter((segment) => segment.startHour + segment.hours <= progress).length + 1));
         const delivered = progress >= order.totalHours;
@@ -82,7 +121,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!state.hydrated || !state.simulationRunning) return undefined;
     const timer = setInterval(() => {
-      if (stateRef.current.orders.some((order) => order.status !== 'delivered')) {
+      if (stateRef.current.orders.some((order) => order.status !== 'delivered' && order.status !== 'cancelled')) {
         dispatch({ type: 'tick', hours: SIMULATED_HOURS_PER_TICK });
       }
     }, TICK_MS);
@@ -91,6 +130,9 @@ export function AppProvider({ children }) {
 
   const actions = useMemo(() => ({
     addProduct: (product) => dispatch({ type: 'addProduct', product }),
+    removeProduct: (productId) => dispatch({ type: 'removeProduct', productId }),
+    cancelOrder: (orderId) => dispatch({ type: 'cancelOrder', orderId, cancelledAt: stateRef.current.simulatedNow }),
+    clearDeliveredOrders: () => dispatch({ type: 'clearDeliveredOrders' }),
     saveDeparture: (departure) => dispatch({ type: 'saveDeparture', departure }),
     selectOrder: (id) => dispatch({ type: 'selectOrder', id }),
     toggleSimulation: () => dispatch({ type: 'toggleSimulation' }),

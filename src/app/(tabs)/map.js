@@ -1,15 +1,38 @@
 import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Button, Card, Text, useTheme } from 'react-native-paper';
 import { cityById, formatDate, useApp } from '../../context/AppContext';
 
 export default function MapScreen() {
   const { orders, selectedOrderId, simulatedNow, toggleSimulation, simulationRunning } = useApp();
   const { colors } = useTheme();
+  const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
   const order = orders.find((item) => item.id === selectedOrderId);
   if (!order) return <View style={[styles.empty, { backgroundColor: colors.background }]}><Text variant="titleMedium">Selecciona un pedido desde Pedidos para consultar su rastreo.</Text></View>;
-  const cities = order.route.map(cityById).filter(Boolean);
+  if (order.status === 'cancelled') return <View style={[styles.empty, { backgroundColor: colors.background }]}><Text variant="titleMedium">Este pedido fue cancelado y ya no tiene rastreo activo.</Text></View>;
+  const cities = (Array.isArray(order.route) ? order.route : []).map(cityById).filter(Boolean);
   const current = cityById(order.currentCityId);
+  const hasValidCoordinates = cities.every((city) =>
+    Number.isFinite(city.latitude) && Number.isFinite(city.longitude)
+  ) && current && Number.isFinite(current.latitude) && Number.isFinite(current.longitude);
+  if (!cities.length || !hasValidCoordinates) return <View style={[styles.empty, { backgroundColor: colors.background }]}><Text variant="titleMedium">No hay información de ruta disponible para este pedido.</Text></View>;
+  if (!isExpoGo) return <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <Card style={[styles.fallbackPanel, { backgroundColor: colors.surface }]}>
+      <Card.Content>
+        <Text variant="titleMedium">{order.productName}</Text>
+        <Text>Ubicación actual: {current.name}</Text>
+        <Text>Reloj simulado: {formatDate(simulatedNow)}</Text>
+        <Text>Ruta: {cities.map((city) => city.name).join(' → ')}</Text>
+        <Text style={{ color: colors.mutedText, marginTop: 8 }}>
+          La vista de mapa está disponible en Expo Go. En esta APK se conserva el rastreo por ubicación y ruta.
+        </Text>
+        <Button mode="contained" onPress={toggleSimulation} style={{ marginTop: 12 }}>
+          {simulationRunning ? 'Pausar simulación' : 'Reanudar simulación'}
+        </Button>
+      </Card.Content>
+    </Card>
+  </View>;
   const coordinates = cities.map(({ latitude, longitude }) => ({ latitude, longitude }));
   return <View style={[styles.container, { backgroundColor: colors.background }]}>
     <MapView style={styles.map} initialRegion={{ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 10, longitudeDelta: 10 }}>
@@ -32,5 +55,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   panel: { position: 'absolute', left: 12, right: 12, bottom: 12 },
+  fallbackPanel: { margin: 12 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 });
